@@ -7,12 +7,13 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/Manukesharwani09/goRestapi/internal/storage"
 	"github.com/Manukesharwani09/goRestapi/internal/types"
 	"github.com/Manukesharwani09/goRestapi/internal/utils/response"
 	"github.com/go-playground/validator"
 )
 
-func New() http.HandlerFunc {
+func New(storage storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		var student types.Student
@@ -32,8 +33,14 @@ func New() http.HandlerFunc {
 			response.WriteJson(w, http.StatusBadRequest, response.ValidationError(validateErrs))
 			return
 		}
+		lastId, err := storage.CreateStudent(student.Name, student.Email, student.Age)
+		slog.Info("student created", slog.Int64("id", lastId))
+		if err != nil {
+			response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err))
+			return
+		}
 
 		slog.Info("creating a request")
-		response.WriteJson(w, http.StatusCreated, map[string]string{"message": "student created successfully"})
+		response.WriteJson(w, http.StatusCreated, map[string]int64{"id": lastId})
 	}
 }

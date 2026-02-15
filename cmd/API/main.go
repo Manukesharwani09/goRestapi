@@ -12,6 +12,7 @@ import (
 
 	"github.com/Manukesharwani09/goRestapi/internal/config"
 	"github.com/Manukesharwani09/goRestapi/internal/http/handlers/student"
+	"github.com/Manukesharwani09/goRestapi/internal/storage/sqlite"
 )
 
 func main() {
@@ -20,9 +21,14 @@ func main() {
 
 	cfg := config.MustLoad()
 	// database steup
+	storage, err := sqlite.New(cfg)
+	if err != nil {
+		log.Fatal("failed to initialize storage", err)
+	}
+	slog.Info("storage initialized", slog.String("path", cfg.StoragePath), slog.String("env", cfg.Env))
 	//ruouter
 	router := http.NewServeMux()
-	router.HandleFunc("POST /api/students", student.New())
+	router.HandleFunc("POST /api/students", student.New(storage))
 	//server setuo
 	server := http.Server{
 		Addr:    cfg.HTTPServer.Addr,
@@ -43,7 +49,7 @@ func main() {
 	slog.Info("shutting serevr")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	err := server.Shutdown(ctx)
+	err = server.Shutdown(ctx)
 	if err != nil {
 		slog.Error("server shutdown error", err.Error())
 	}
