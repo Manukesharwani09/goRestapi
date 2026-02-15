@@ -6,6 +6,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/Manukesharwani09/goRestapi/internal/storage"
 	"github.com/Manukesharwani09/goRestapi/internal/types"
@@ -42,5 +43,25 @@ func New(storage storage.Storage) http.HandlerFunc {
 
 		slog.Info("creating a request")
 		response.WriteJson(w, http.StatusCreated, map[string]int64{"id": lastId})
+	}
+}
+
+func GetById(storage storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue(("id"))
+		slog.Info("getting student by id", slog.String("id", id))
+		intId, err := strconv.ParseInt(id, 10, 64)
+		if err != nil {
+			slog.Error("failed to parse id", slog.String("id", id), slog.String("error", err.Error()))
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+			return
+		}
+		student, err := storage.GetStudentById(intId)
+		if err != nil {
+			slog.Error("failed to get student by id", slog.Int64("id", intId), slog.String("error", err.Error()))
+			response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err))
+			return
+		}
+		response.WriteJson(w, http.StatusOK, student)
 	}
 }
