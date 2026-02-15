@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Manukesharwani09/goRestapi/internal/config"
+	"github.com/Manukesharwani09/goRestapi/internal/http/handlers/student"
 )
 
 func main() {
@@ -21,9 +22,7 @@ func main() {
 	// database steup
 	//ruouter
 	router := http.NewServeMux()
-	router.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("welcome"))
-	})
+	router.HandleFunc("POST /api/students", student.New())
 	//server setuo
 	server := http.Server{
 		Addr:    cfg.HTTPServer.Addr,
