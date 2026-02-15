@@ -9,6 +9,7 @@ import (
 
 	"github.com/Manukesharwani09/goRestapi/internal/types"
 	"github.com/Manukesharwani09/goRestapi/internal/utils/response"
+	"github.com/go-playground/validator"
 )
 
 func New() http.HandlerFunc {
@@ -21,6 +22,17 @@ func New() http.HandlerFunc {
 			return
 
 		}
+		if err != nil {
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+			return
+		}
+		//request validation
+		if err := validator.New().Struct(student); err != nil {
+			validateErrs := err.(validator.ValidationErrors)
+			response.WriteJson(w, http.StatusBadRequest, response.ValidationError(validateErrs))
+			return
+		}
+
 		slog.Info("creating a request")
 		response.WriteJson(w, http.StatusCreated, map[string]string{"message": "student created successfully"})
 	}
